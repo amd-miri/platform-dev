@@ -26,8 +26,8 @@
   "repositories": [
     {
       "_comment": "Temporary fork of drupal/coder with a fix for NEXTEUROPA-4429",
-      "type": "vcs",
-      "url": "git@github.com:pfrenssen/coder.git"
+      "type": "git",
+      "url": "https://github.com/pfrenssen/coder.git"
     },
     {
       "_comment": "Temporary fork of squizlabs/php_codesniffer including fix for NEXTEUROPA-4429.",
