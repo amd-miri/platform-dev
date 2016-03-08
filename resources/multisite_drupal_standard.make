@@ -679,12 +679,11 @@ libraries[colorbox][download][url] = https://github.com/jackmoore/colorbox/archi
 libraries[colorbox][directory_name] = colorbox
 libraries[colorbox][destination] = libraries
 
-; ckeditor 4.4.8
+; ckeditor 4.5.7
 libraries[ckeditor][download][type]= "file"
 libraries[ckeditor][download][request_type]= "get"
 libraries[ckeditor][download][file_type] = "zip"
-libraries[ckeditor][download][url] = "http://download.cksource.com/CKEditor/CKEditor/CKEditor%204.4.8/ckeditor_4.4.8_full.zip"
-libraries[ckeditor][download][sha1] = "ed246ac87cad3c4cfa1f723fcfbe4a6e3a5c6992"
+libraries[ckeditor][download][url] = "http://download.cksource.com/CKEditor/CKEditor/CKEditor%204.5.7/ckeditor_4.5.7_full.zip"
 libraries[ckeditor][directory_name] = "ckeditor"
 
 ; ckeditor_lite library. Buttons are added in nexteuropa_core_install().
@@ -702,6 +701,30 @@ libraries[ckeditor_moono][download][file_type] = "zip"
 libraries[ckeditor_moono][download][url] = "http://download.ckeditor.com/moonocolor/releases/moonocolor_4.5.1.zip"
 libraries[ckeditor_moono][destination] = "../common/modules/features/multisite_wysiwyg/ckeditor/skins"
 libraries[ckeditor_moono][directory_name] = "moonocolor"
+
+; btgrid
+libraries[ckeditor_btgrid][download][type]= "file"
+libraries[ckeditor_btgrid][download][request_type]= "get"
+libraries[ckeditor_btgrid][download][file_type] = "zip"
+libraries[ckeditor_btgrid][download][url] = http://download.ckeditor.com/btgrid/releases/btgrid_1.0b.zip
+libraries[ckeditor_btgrid][subdir] = "ckeditor/plugins"
+libraries[ckeditor_btgrid][directory_name] = "btgrid"
+
+; widget
+libraries[ckeditor_widget][download][type]= "file"
+libraries[ckeditor_widget][download][request_type]= "get"
+libraries[ckeditor_widget][download][file_type] = "zip"
+libraries[ckeditor_widget][download][url] = http://download.ckeditor.com/widget/releases/widget_4.5.7.zip
+libraries[ckeditor_widget][subdir] = "ckeditor/plugins"
+libraries[ckeditor_widget][directory_name] = "widget"
+
+; lineutils
+libraries[ckeditor_lineutils][download][type]= "file"
+libraries[ckeditor_lineutils][download][request_type]= "get"
+libraries[ckeditor_lineutils][download][file_type] = "zip"
+libraries[ckeditor_lineutils][download][url] = http://download.ckeditor.com/lineutils/releases/lineutils_4.5.7.zip
+libraries[ckeditor_lineutils][subdir] = "ckeditor/plugins"
+libraries[ckeditor_lineutils][directory_name] = "lineutils"
 
 ; cycle 3.0.2 (commit d6557ca)
 libraries[cycle][download][type] = "git"

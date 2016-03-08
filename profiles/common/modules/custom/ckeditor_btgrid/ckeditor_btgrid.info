@@ -1,0 +1,5 @@
+name = CKEDITOR BOOSTRAP GRID
+description = "Provides the simple Bootstrap 3 grid creation plugin.."
+package = "CK Modules"
+core = 7.x
+
