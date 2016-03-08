@@ -26,16 +26,20 @@
   padding-bottom: 5px;
 }
 .row:last-child {
-  padding-bottom:0;
+  padding-bottom: 0;
 }
-.row:after, .row:before, .btgrid:before, .btgrid:after {
+.row:after,
+.row:before,
+.btgrid:before,
+.btgrid:after {
   display: table;
   content: " ";
 }
 .row:after {
   clear: both;
 }
-:after, :before {
+:after,
+:before {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
@@ -76,7 +80,18 @@
 .col-md-12 {
   width: 100%;
 }
-.col-md-1, .col-md-10, .col-md-11, .col-md-12, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9 {
+.col-md-1,
+.col-md-10,
+.col-md-11,
+.col-md-12,
+.col-md-2,
+.col-md-3,
+.col-md-4,
+.col-md-5,
+.col-md-6,
+.col-md-7,
+.col-md-8,
+.col-md-9 {
   float: left;
   position: relative;
   min-height: 1px;

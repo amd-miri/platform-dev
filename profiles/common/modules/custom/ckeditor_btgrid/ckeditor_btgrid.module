@@ -1,50 +1,41 @@
 <?php
-
 /**
  * @file
  * Simple Bootstrap 3 grid creation plugin.
  */
 
-
+/**
+ * Implement HOOK_wysiwyg_plugin() for ckeditor_btgrid_wysiwyg_plugin().
+ */
 function ckeditor_btgrid_wysiwyg_plugin($editor, $version) {
-    $path = wysiwyg_get_path('ckeditor');
-
-    switch ($editor) {
-        case 'ckeditor':
-            return array(
-                'dialog' => array(
-                    'path' => $path . '/plugins/dialog',
-                    'buttons' => array(
-                        'dialog' => t('Dialog'),
-                    ),
-                    'url' => 'http://ckeditor.com/addon/dialog',
-                    'load' => TRUE,
-                ),
-                'lineutils' => array(
-                    'path' => $path . '/plugins/lineutils',
-                    'buttons' => array(
-                        'lineutils' => t('Line Utils'),
-                    ),
-                    'url' => 'http://ckeditor.com/addon/lineutils',
-                    'load' => TRUE,
-                ),
-                'widget' => array(
-                    'path' => $path . '/plugins/widget',
-                    'buttons' => array(
-                        'widget' => t('Widget'),
-                    ),
-                    'url' => 'http://ckeditor.com/addon/widget',
-                    'load' => TRUE,
-                ),
-                'btgrid' => array(
-                    'path' => drupal_get_path('module', 'ckeditor_btgrid') . '/ckeditor/btgrid',
-                    'buttons' => array(
-                        'btgrid' => t('Bootstrap Grid - NextEuropa'),
-                    ),
-                    'url' => 'http://ckeditor.com/addon/btgrid',
-                    'load' => TRUE,
-                ),
-            );
-            break;
-    }
+  $path = wysiwyg_get_path('ckeditor');
+  switch ($editor) {
+    case 'ckeditor':
+      return array(
+        'dialog' => array(
+          'path' => $path . '/plugins/dialog',
+          'buttons' => array('dialog' => t('Dialog')),
+          'url' => 'http://ckeditor.com/addon/dialog',
+          'load' => TRUE,
+        ),
+        'lineutils' => array(
+          'path' => $path . '/plugins/lineutils',
+          'buttons' => array('lineutils' => t('Line Utils')),
+          'url' => 'http://ckeditor.com/addon/lineutils',
+          'load' => TRUE,
+        ),
+        'widget' => array(
+          'path' => $path . '/plugins/widget',
+          'buttons' => array('widget' => t('Widget')),
+          'url' => 'http://ckeditor.com/addon/widget',
+          'load' => TRUE,
+        ),
+        'btgrid' => array(
+          'path' => drupal_get_path('module', 'ckeditor_btgrid') . '/ckeditor/btgrid',
+          'buttons' => array('btgrid' => t('Bootstrap Grid - NextEuropa')),
+          'url' => 'http://ckeditor.com/addon/btgrid',
+          'load' => TRUE,
+        ),
+      );
+  }
 }

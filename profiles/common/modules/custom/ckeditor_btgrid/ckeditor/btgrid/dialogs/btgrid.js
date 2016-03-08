@@ -1,4 +1,8 @@
-CKEDITOR.dialog.add( 'btgrid', function( editor ) {
+/**
+ * @file
+ */
+
+CKEDITOR.dialog.add('btgrid', function(editor) {
   var lang = editor.lang.btgrid;
   var commonLang = editor.lang.common;
 
@@ -9,7 +13,8 @@ CKEDITOR.dialog.add( 'btgrid', function( editor ) {
         pass = !!(CKEDITOR.dialog.validate.integer()(value) && value > 0);
 
       if (!pass) {
-        alert(msg); // jshint ignore:line
+        // Jshint ignore:line.
+        alert(msg);
       }
 
       return pass;
@@ -56,14 +61,14 @@ CKEDITOR.dialog.add( 'btgrid', function( editor ) {
               [ '12', 12],
             ],
             validate: validatorNum(lang.numColsError),
-            setup: function( widget ) {
+            setup: function(widget) {
               this.setValue(widget.data.colCount);
             },
             // When committing (saving) this field, set its value to the widget data.
-            commit: function( widget ) {
-              widget.setData( 'colCount', this.getValue());
+            commit: function(widget) {
+              widget.setData('colCount', this.getValue());
             }
-          },
+        },
           {
             id: 'rowCount',
             type: 'text',
@@ -71,13 +76,13 @@ CKEDITOR.dialog.add( 'btgrid', function( editor ) {
             required: true,
             label: lang.genNrRows,
             validate: validatorNum(lang.numRowsError),
-            setup: function( widget ) {
-              this.setValue( widget.data.rowCount );
+            setup: function(widget) {
+              this.setValue(widget.data.rowCount);
             },
-            commit: function( widget ) {
-              widget.setData( 'rowCount', this.getValue());
+            commit: function(widget) {
+              widget.setData('rowCount', this.getValue());
             }
-          }
+        }
         ]
       }
     ],
