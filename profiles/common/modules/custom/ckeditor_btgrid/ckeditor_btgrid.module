@@ -5,7 +5,7 @@
  */
 
 /**
- * Implement HOOK_wysiwyg_plugin() for ckeditor_btgrid_wysiwyg_plugin().
+ * Implements hook_wysiwyg_plugin().
  */
 function ckeditor_btgrid_wysiwyg_plugin($editor, $version) {
   $path = wysiwyg_get_path('ckeditor');
