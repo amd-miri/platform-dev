@@ -622,6 +622,7 @@ projects[votingapi][version] = "2.12"
 projects[webform][subdir] = "contrib"
 projects[webform][version] = "4.12"
 projects[webform][patch][] = patches/webform-use_ecas_link-1235.patch
+projects[webform][patch][] = "https://www.drupal.org/files/issues/webform_excel_reports_corrupted-2125543-57.patch"
 
 projects[webform_rules][subdir] = "contrib"
 projects[webform_rules][version] = "1.6"
