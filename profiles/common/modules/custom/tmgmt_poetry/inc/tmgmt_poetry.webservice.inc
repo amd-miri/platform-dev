@@ -109,7 +109,7 @@ function FPFISPoetryIntegrationRequest($user, $password, $msg) {
     $request = $xml->request;
     $reference = implode("/", (array) $request->demandeId);
     // Get main job in order to register the messages.
-    $main_reference = 'MAIN_%_POETRY_%' . $reference;
+    $main_reference = $reference;
 
     if ($xml->request['type'] == 'status') {
       watchdog("Poetry: Status message", "Response of type 'status' with remote reference !reference.", array('!reference' => $main_reference));
