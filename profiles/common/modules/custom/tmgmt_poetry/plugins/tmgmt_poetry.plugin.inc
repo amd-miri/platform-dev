@@ -485,8 +485,6 @@ xsi:noNamespaceSchemaLocation=\"http://intragate.ec.europa.eu/DGT/poetry_service
   public function saveTranslation(TMGMTJobItem $job_item) {
     $entity = entity_load_single($job_item->item_type, $job_item->item_id);
     $job = tmgmt_job_load($job_item->tjid);
-dpm($job);
-    dpm($entity);
     tmgmt_field_populate_entity($job_item->item_type, $entity, $job->target_language, $job_item->getData());
 
     // Change the active language of the entity to the target language.
