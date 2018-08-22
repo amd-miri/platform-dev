@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * nexteuropa_faq.views_default.inc
@@ -49,7 +50,7 @@ function nexteuropa_faq_views_default_views() {
   $handler->display->display_options['header']['area']['table'] = 'views';
   $handler->display->display_options['header']['area']['field'] = 'area';
   $handler->display->display_options['header']['area']['empty'] = TRUE;
-  $handler->display->display_options['header']['area']['content'] = '<h2>Quick answer to common questions</h2>';
+  $handler->display->display_options['header']['area']['content'] = '<h2 class="ecl-heading ecl-heading--h2">Quick answer to common questions</h2>';
   $handler->display->display_options['header']['area']['format'] = 'full_html';
   /* Header: Global: FAQ Collapsible Menu */
   $handler->display->display_options['header']['f_a_q_collapsible_menu']['id'] = 'f_a_q_collapsible_menu';
@@ -70,11 +71,11 @@ function nexteuropa_faq_views_default_views() {
   $handler->display->display_options['fields']['edit_node']['exclude'] = TRUE;
   $handler->display->display_options['fields']['edit_node']['element_label_colon'] = FALSE;
   /* Field: Content: Body */
-  $handler->display->display_options['fields']['body']['id'] = 'body';
-  $handler->display->display_options['fields']['body']['table'] = 'field_data_body';
-  $handler->display->display_options['fields']['body']['field'] = 'body';
-  $handler->display->display_options['fields']['body']['label'] = '';
-  $handler->display->display_options['fields']['body']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['field_ne_body']['id'] = 'field_ne_body';
+  $handler->display->display_options['fields']['field_ne_body']['table'] = 'field_data_field_ne_body';
+  $handler->display->display_options['fields']['field_ne_body']['field'] = 'field_ne_body';
+  $handler->display->display_options['fields']['field_ne_body']['label'] = '';
+  $handler->display->display_options['fields']['field_ne_body']['element_label_colon'] = FALSE;
   /* Field: Content: All taxonomy terms */
   $handler->display->display_options['fields']['term_node_tid']['id'] = 'term_node_tid';
   $handler->display->display_options['fields']['term_node_tid']['table'] = 'node';

@@ -1,12 +1,15 @@
+@api
 Feature: User authentication
   In order to protect the integrity of the website
   As a product owner
   I want to make sure only authenticated users can access the site administration
 
+@theme_wip
+# It is in theme wip waiting for the resolution of the NEPT-1190.
 Scenario: Anonymous user can see the user login page
   Given I am not logged in
   When I visit "user"
-  Then I should see the text "ECAS Login"
+  Then I should see the text "EU Login"
   And I should see the text "Request new password"
   And I should see the text "Username"
   And I should see the text "Password"
@@ -32,8 +35,8 @@ Scenario Outline: Editors can access certain administration pages
   Then I visit "<path>"
 
   Examples:
-  | path             |
-  | node/add/article |
+  | path                       |
+  | node/add/article           |
 
 @api
 Scenario Outline: Editors cannot access pages intended for administrators
@@ -47,6 +50,7 @@ Scenario Outline: Editors cannot access pages intended for administrators
   | admin/dashboard             |
   | admin/structure             |
   | admin/structure/feature-set |
+  | node/add/editorial-team_en  |
 
 @api
 Scenario Outline: Administrators can access certain administration pages
@@ -60,6 +64,7 @@ Scenario Outline: Administrators can access certain administration pages
   | admin/structure             |
   | admin/structure/feature-set |
   | node/add/article            |
+  | node/add/editorial-team_en |
 
 @api
 Scenario Outline: Administrators should not be able to access technical pages intended for developers

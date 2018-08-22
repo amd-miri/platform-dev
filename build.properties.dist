@@ -5,7 +5,23 @@
 platform.profile.name = multisite_drupal_standard
 
 # The site name.
-platform.site.name = NextEuropa
+platform.site.name = European Commission
+
+# The default theme to enable, set to either "ec_europa" or "ec_resp".
+platform.site.theme_default = ec_resp
+
+# The default Europa Component Library release
+ecl.version = 0.21.0
+
+# The default EC Europa theme release
+ec_europa.version = 0.0.10
+
+# The default Atomium and Europa theme build properties.
+# Used only if default theme is set to "ec_europa".
+platform.theme.atomium.repo.url = https://github.com/ec-europa/atomium.git
+platform.theme.atomium.repo.branch = 7.x-2.x
+platform.theme.europa.repo.url = https://github.com/ec-europa/ec_europa.git
+platform.theme.europa.repo.branch = master
 
 # The Drupal core make file.
 drupal.make = ${platform.resources.dir}/drupal-core.make
@@ -64,10 +80,12 @@ platform.build.dir = ${project.basedir}/${phing.project.build.dir}
 # Local resources
 platform.resources.dir = ${platform.basedir}/resources
 platform.resources.profiles.dir = ${platform.basedir}/profiles
+platform.resources.profiles.common.themes.dir = ${platform.basedir}/profiles/common/themes
 platform.resources.profile.dir = ${platform.resources.profiles.dir}/${platform.profile.name}
 
 platform.resources.composer.json = ${platform.resources.dir}/composer.json
 platform.resources.composer.lock = ${platform.resources.dir}/composer.lock
+platform.resources.favicon.ico = ${platform.resources.dir}/favicon.ico
 
 platform.resources.source.dir = ${platform.basedir}/src
 
@@ -83,6 +101,7 @@ platform.build.profile.dir = ${platform.build.profiles.dir}/${platform.profile.n
 
 platform.build.composer.json = ${platform.build.dir}/composer.json
 platform.build.composer.lock = ${platform.build.dir}/composer.lock
+platform.build.favicon.ico = ${platform.build.dir}/favicon.ico
 
 # Git resources.
 phing.project.git.dir = ${project.basedir}/.git
@@ -108,20 +127,46 @@ behat.yml.path = ${behat.dir}/behat.yml
 # The base URL to use in Behat tests.
 behat.base_url = http://localhost
 
+# The URL of the Behat webdriver host.
+behat.wd_host.url = http://localhost:8643/wd/hub
+
 # The location to search for Behat subcontexts.
 behat.subcontexts.path = ${platform.build.profiles.dir}/common/modules
 
 # The output format to use for Behat tests, either 'progress' or 'pretty'.
-behat.formatter.name = progress
+behat.formatter.name = pretty
 
 # Enable strict mode in Behat tests. Will only pass if all tests are explicitly
 # passing.
-behat.options.strict = false
+behat.options.strict = true
 
 # Set verbosity for Behat tests. 0 is completely silent, 1 is normal output, 2
 # shows exception backtraces, 3 shows debugging information.
 behat.options.verbosity = 2
 
+# Load balancer Phing task configuration.
+behat.load_balancer.containers = 5
+behat.load_balancer.root = ${behat.dir}
+behat.load_balancer.destination = ${behat.dir}/balancer
+behat.load_balancer.import = ${behat.yml.path}
+
+# PHPUnit configuration
+# -------------------
+
+# The location of the PHPUnit executable.
+phpunit.bin = ${project.basedir}/bin/phpunit
+
+# The location of the PHPUnit configuration files.
+phpunit.dir = ${project.basedir}/tests
+
+# The location of the PHPUnit configuration template.
+phpunit.xml.template = ${phpunit.dir}/phpunit.xml.dist
+
+# The location of the generated Behat configuration file.
+phpunit.xml.path = ${phpunit.dir}/phpunit.xml
+
+# The base URL to use in PHPUnit tests.
+phpunit.base_url = ${behat.base_url}
 
 # PHP CodeSniffer configuration
 # -----------------------------
@@ -132,11 +177,21 @@ phpcs.extensions = php inc module install info test profile theme css js
 # The default configuration file to generate.
 phpcs.config = ${project.basedir}/phpcs.xml
 
-# The coding standard to use.
-phpcs.standard = ${project.basedir}/phpcs-ruleset.xml
+# The default path of qa-automation.
+phpcs.qa_automation.path = ${project.basedir}/vendor/ec-europa/qa-automation
 
-# Paths to check, delimited by semicolons.
-phpcs.files = ${platform.resources.profiles.dir};${platform.resources.source.dir}
+# The locations for installed standards, delimited by spaces, commas or semicolons.
+phpcs.installed.paths = ${phpcs.qa_automation.path}/phpcs/SubStandards
+
+# The coding standards to use, delimited by spaces, commas or semicolons.
+phpcs.standards = Platform;${project.basedir}/phpcs-ruleset.xml
+
+# Returns a 0 error code when only warnings are found if enabled. Meant for CI.
+# Set to 1 for ignoring warnings, 0 for showing warnings.
+phpcs.ignore.warnings = 0
+
+# Paths to check, delimited by spaces, commas or semicolons.
+phpcs.files = ${platform.resources.profiles.dir};${platform.resources.source.dir};${behat.dir};
 
 # Paths to ignore, delimited by semicolons.
 phpcs.ignore =
@@ -168,3 +223,26 @@ drush.verbose = FALSE
 
 # Verbosity of PHP Codesniffer. Set to 1 for progress report, 2 for debugging info.
 phpcs.verbose = 0
+
+# Flickr configuration
+# --------------------
+
+# A valid API key & secret used by the behat tests
+flickr.key = foobar
+flickr.secret = bas
+
+# Integration configuration
+# -------------------------
+
+# Port on which the mocked integration server used by the behat tests will listen.
+integration.server.port = 8888
+
+# Varnish configuration
+# -------------------------
+
+# Port on which the mocked Varnish server used by the behat tests will listen.
+varnish.server.port = 8888
+
+# Drush Context configuration
+# ---------------------------
+drush.db.dump = ${platform.build.dir}/dump.sql

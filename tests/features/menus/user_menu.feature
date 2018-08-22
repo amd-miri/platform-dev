@@ -1,9 +1,9 @@
+@api
 Feature: User menu
   In order to easily access the important functionality
   As an administrative user
   I want to have links to the most important pages in my user menu
 
-  @api
   Scenario Outline: Test user menu as administrator
     Given I am logged in as a user with the "administrator" role and I have the following fields:
     | first name      | Myrrine |
@@ -13,14 +13,13 @@ Feature: User menu
     Then I should see the heading "<heading>"
 
     Examples:
-      | link                     | heading                  |
-      | My workbench             | My Workbench             |
-      | My account               | Myrrine Augusta          |
-      | Manage translation tasks | Manage Translation Tasks |
-      | Translate                | Translate                |
-      | Log out                  | Welcome to NextEuropa    |
+      | link                     | heading                           |
+      | My workbench             | My Workbench                      |
+      | My account               | Myrrine Augusta                   |
+      | Manage translation tasks | Manage Translation Tasks          |
+      | Translate                | Translate                         |
+      | Log out                  | Welcome to European Commission    |
 
-  @api
   Scenario Outline: Test user menu as editorial team member
     Given I am logged in as a user with the "editorial team member" role and I have the following fields:
     | first name      | Yami   |
@@ -30,12 +29,11 @@ Feature: User menu
     Then I should see the heading "<heading>"
 
     Examples:
-      | link         | heading               |
-      | My workbench | My Workbench          |
-      | My account   | Yami Vígdís           |
-      | Log out      | Welcome to NextEuropa |
+      | link         | heading                        |
+      | My workbench | My Workbench                   |
+      | My account   | Yami Vígdís                    |
+      | Log out      | Welcome to European Commission |
 
-  @api
   Scenario Outline: Test user menu as editor
     Given I am logged in as a user with the "editor" role and I have the following fields:
     | first name      | Cornelia   |
@@ -45,12 +43,11 @@ Feature: User menu
     Then I should see the heading "<heading>"
 
     Examples:
-      | link         | heading               |
-      | My workbench | My Workbench          |
-      | My account   | Cornelia Polyhymnia   |
-      | Log out      | Welcome to NextEuropa |
+      | link         | heading                        |
+      | My workbench | My Workbench                   |
+      | My account   | Cornelia Polyhymnia            |
+      | Log out      | Welcome to European Commission |
 
-  @api
   Scenario Outline: Test that editors and editorial team members cannot access translation links
     Given I am logged in as a "<role>"
     When I am on the homepage

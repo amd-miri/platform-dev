@@ -18,7 +18,15 @@
             <param>${platform.profile.name}</param>
             <!-- Prevent e-mails from being sent during the installation. -->
             <param>install_configure_form.update_status_module='array(FALSE,FALSE)'</param>
+            <!-- Setup default theme. -->
+            <param>cce_basic_config_profile_theme_default_form.theme_default=${platform.site.theme_default}</param>
         </drush>
+        
+        <!-- Enable the "Database logging" module needed to develop and to run the platform behat tests (NEPT-308). -->
+        <phingcall target="enable-dblog-module" />
+
+	<!-- Rebuild node access after site installation -->
+        <phingcall target="rebuild-node-access" />
     </target>
 
     <!-- Set up PHP CodeSniffer. -->
@@ -43,47 +51,134 @@
             files="${phpcs.files}"
             globalConfig="${phpcs.global.config}"
             ignorePatterns="${phpcs.ignore}"
+            installedPaths="${phpcs.installed.paths}"
+            ignoreWarnings = "${phpcs.ignore.warnings}"
             report="${phpcs.report}"
             showProgress="${phpcs.progress}"
             showSniffCodes="${phpcs.sniffcodes}"
-            standard="${phpcs.standard}"
+            standards="${phpcs.standards}"
         />
     </target>
 
     <!-- Set up Behat. -->
     <target name="setup-behat">
         <if>
-            <available file="${behat.yml.path}" type="file" property="behat.yml.available" />
+            <isset property="env.FLICKR_KEY" />
             <then>
-                <echo message="Deleting existing behat.yml configuration file" />
-                <delete file="${behat.yml.path}" failonerror="false" />
+                <property name="flickr.key" value="${env.FLICKR_KEY}" override="true" />
             </then>
         </if>
-        <echo message="Creating behat.yml configuration file" />
-        <loadfile property="behat.yml.content" file="${behat.yml.template}">
+        <if>
+            <isset property="env.FLICKR_SECRET" />
+            <then>
+                <property name="flickr.secret" value="${env.FLICKR_SECRET}" override="true" />
+            </then>
+        </if>
+        <copy todir="${behat.dir}" overwrite="true">
+            <fileset dir="${behat.dir}" casesensitive="yes">
+                <include name="*.yml.dist"/>
+            </fileset>
             <filterchain>
-                <replacetokens>
-                    <token key="project.code.dir" value="${project.code.dir}" />
-                    <token key="drupal.site.dir" value="${drupal.site.dir}" />
+                <replacetokens begintoken="{{ " endtoken=" }}">
                     <token key="behat.base_url" value="${behat.base_url}" />
+                    <token key="behat.wd_host.url" value="${behat.wd_host.url}" />
+                    <token key="behat.browser.name" value="${behat.browser.name}" />
+                    <token key="platform.build.dir" value="${platform.build.dir}" />
+                    <token key="behat.subcontexts.path" value="${behat.subcontexts.path}" />
+                    <token key="flickr.key" value="${flickr.key}" />
+                    <token key="flickr.secret" value="${flickr.secret}" />
+                    <token key="drush.bin" value="${drush.bin}" />
+                    <token key="drush.db.dump" value="${drush.db.dump}" />
                     <token key="behat.formatter.name" value="${behat.formatter.name}" />
-                    <token key="platform.bin" value="${platform.bin}" />
+                    <token key="integration.server.port" value="${integration.server.port}" />
+                    <token key="varnish.server.port" value="${varnish.server.port}" />
                 </replacetokens>
             </filterchain>
-        </loadfile>
-        <echo message="${behat.yml.content}" file="${behat.yml.path}" />
-        <symlink link="${phing.project.build.dir}/behat.yml" target="../tests/behat.yml" />
+            <mapper type="glob" from="*.yml.dist" to="*.yml" />
+        </copy>
+        <symlink link="${phing.project.build.dir}" overwrite="true">
+            <fileset dir="${behat.dir}" casesensitive="yes">
+                <include name="*.yml"/>
+            </fileset>
+        </symlink>
         <symlink link="${phing.project.build.dir}/features" target="../tests/features" />
+        <symlink link="${phing.project.build.dir}/tests" target="../tests" />
+        <symlink link="bin/behat" target="../${phing.project.build.dir}/vendor/bin/behat" overwrite="true"/>
+    </target>
+
+    <!-- Set up Behat balancer. -->
+    <target name="setup-behat-balancer">
+        <behat:balancer
+            containers="${behat.load_balancer.containers}"
+            root="${behat.load_balancer.root}"
+            destination="${behat.load_balancer.destination}"
+            import="${behat.load_balancer.import}"
+        />
     </target>
 
     <!-- Run Behat tests. -->
     <target name="behat" description="Run Behat tests.">
+        <foreach param="filename" absparam="config" target="behat-suite">
+          <fileset dir="${behat.dir}">
+            <include name="*.yml"/>
+          </fileset>
+        </foreach>
+    </target>
+
+    <target name="behat-suite" description="Run Behat tests suite.">
         <behat
             executable="${behat.bin}"
-            config="${behat.yml.path}"
+            config="${config}"
             strict="${behat.options.strict}"
             verbose="${behat.options.verbosity}"
         />
     </target>
 
+    <!-- Set up PHPUnit. -->
+    <target name="setup-phpunit">
+        <copy todir="${phpunit.dir}" overwrite="true">
+            <fileset dir="${phpunit.dir}" casesensitive="yes">
+                <include name="*.xml.dist"/>
+            </fileset>
+            <filterchain>
+                <replacetokens begintoken="{{ " endtoken=" }}">
+                    <token key="phpunit.base_url" value="${phpunit.base_url}" />
+                    <token key="platform.build.dir" value="${platform.build.dir}" />
+                    <token key="phpunit.dir" value="${phpunit.dir}" />
+                </replacetokens>
+            </filterchain>
+            <mapper type="glob" from="*.xml.dist" to="*.xml" />
+        </copy>
+        <symlink link="${phing.project.build.dir}" overwrite="true">
+            <fileset dir="${phpunit.dir}" casesensitive="yes">
+                <include name="*.yml"/>
+            </fileset>
+        </symlink>
+        <symlink link="${phing.project.build.dir}/tests" target="../tests" />
+        <symlink link="bin/phpunit" target="../${phing.project.build.dir}/vendor/bin/phpunit" overwrite="true"/>
+    </target>
+
+    <!-- Rebuild node access. -->
+    <target name="rebuild-node-access">
+        <drush
+            command="php-eval"
+            assume="yes"
+            root="${platform.build.dir}"
+            bin="${drush.bin}"
+            verbose="${drush.verbose}">
+            <param>"node_access_rebuild()"</param>
+        </drush>
+    </target>
+
+    <!-- Enable the "Database logging" module. -->
+    <target name="enable-dblog-module">
+        <drush
+            command="pm-enable"
+            assume="yes"
+            root="${platform.build.dir}"
+            bin="${drush.bin}"
+            verbose="${drush.verbose}">
+            <param>"dblog"</param>
+        </drush>
+    </target>
 </project>

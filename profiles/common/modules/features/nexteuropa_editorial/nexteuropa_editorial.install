@@ -17,6 +17,9 @@ function nexteuropa_editorial_install() {
   // See: nexteuropa_editorial_og_membership_delete().
   multisite_config_service('user')->createRole(NEXTEUROPA_EDITORIAL_TEAM_MEMBER_ROLE, 2);
 
+  // Use soft config for editorial_teams comment form location.
+  multisite_config_service('comment')->setThreadingCommentForContentType('editorial_team', 1);
+
   // Set "editorial team member" permissions.
   $permissions = array(
 
@@ -76,10 +79,13 @@ function nexteuropa_editorial_install() {
     'use workbench_moderation my drafts tab',
     'use workbench_moderation needs review tab',
 
+    // WYSIWYG Editor.
+    'use media wysiwyg',
+
     // System.
     'access administration pages',
   );
-  multisite_config_service('user')->grantPermission(NEXTEUROPA_EDITORIAL_TEAM_MEMBER_ROLE, $permissions);
+  multisite_config_service('user')->grantPermission(NEXTEUROPA_EDITORIAL_TEAM_MEMBER_ROLE, $permissions, 'nexteuropa_editorial');
 
   // Set "administrator" permissions.
   multisite_config_service('user')->grantPermission('administrator', $permissions);
@@ -226,4 +232,30 @@ function nexteuropa_editorial_enable() {
   foreach ($og_roles as $og_role) {
     multisite_config_service('og')->grantOgPermissions($og_role, array('access group broken links report'), 'node', 'editorial_team', 'og_linkchecker');
   }
+}
+
+/**
+ * NEXTEUROPA-11901: "ckeditor_lite highlight changes" (editorial team member).
+ */
+function nexteuropa_editorial_update_7001() {
+  // Set permissions for "contributor" role.
+  $permissions = array(
+    // Version Management.
+    'ckeditor_lite highlight changes',
+  );
+  multisite_config_service('user')->grantPermission(NEXTEUROPA_EDITORIAL_TEAM_MEMBER_ROLE, $permissions);
+}
+
+/**
+ * NEXTEUROPA-12634: Set "wysiwyg tracking settings." variable.
+ */
+function nexteuropa_editorial_update_7002() {
+  // Workbench moderation state for WYSIWYG tracking settings.
+  $wbm_state = array(
+    'validated' => 'validated',
+    'published' => 'published',
+  );
+  variable_set('nexteuropa_editorial_tracking_wbm_states', $wbm_state);
+  // WYSIWYG tracking settings for "Published" status case.
+  variable_set('nexteuropa_editorial_tracking_status', 1);
 }

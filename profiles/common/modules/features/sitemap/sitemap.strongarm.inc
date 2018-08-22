@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * sitemap.strongarm.inc
@@ -23,6 +24,27 @@ function sitemap_strongarm() {
   $strongarm->name = 'xmlsitemap_frontpage_priority';
   $strongarm->value = '1.0';
   $export['xmlsitemap_frontpage_priority'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'xmlsitemap_multilingual';
+  $strongarm->value = 1;
+  $export['xmlsitemap_multilingual'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = TRUE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'xmlsitemap_multilingual_only_nodes';
+  $strongarm->value = 1;
+  $export['xmlsitemap_multilingual_only_nodes'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = TRUE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'xmlsitemap_multilingual_x_default';
+  $strongarm->value = 'none';
+  $export['xmlsitemap_multilingual_x_default'] = $strongarm;
 
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */

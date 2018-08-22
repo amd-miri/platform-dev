@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains integration code for TMGMT Poetry custom module.
@@ -89,10 +90,10 @@ function nexteuropa_token_ckeditor_tmgmt_poetry_get_fields($entity, $entity_type
  * Replace NextEuropa Tokens by TMGMT Poetry ignore tags.
  *
  * @param string $text
- *    Input text.
+ *   Input text.
  *
  * @return string
- *    Text where tokens have been replaced by ignore tags.
+ *   Text where tokens have been replaced by ignore tags.
  */
 function nexteuropa_token_ckeditor_replace_tokens_with_tmgmt_poetry_ignore_tags($text) {
   $regular_expressions = array(
@@ -103,9 +104,11 @@ function nexteuropa_token_ckeditor_replace_tokens_with_tmgmt_poetry_ignore_tags(
   foreach ($regular_expressions as $regular_expression) {
     $matches = array();
     preg_match_all($regular_expression, $text, $matches);
-    if ($matches && isset($matches[1][0])) {
-      $replace = sprintf(NEXTEUROPA_TOKEN_CKEDITOR_TMGMT_POETRY_IGNORE_TAG, $matches[1][0]);
-      $text = str_replace($matches[1][0], $replace, $text);
+    if ($matches && !empty($matches[1])) {
+      foreach (array_unique($matches[1]) as $match) {
+        $replace = sprintf(NEXTEUROPA_TOKEN_CKEDITOR_TMGMT_POETRY_IGNORE_TAG, $match);
+        $text = str_replace($match, $replace, $text);
+      }
     }
   }
   return $text;
@@ -115,10 +118,10 @@ function nexteuropa_token_ckeditor_replace_tokens_with_tmgmt_poetry_ignore_tags(
  * Replace TMGMT Poetry ignore tags by NextEuropa Tokens.
  *
  * @param string $text
- *    Input text.
+ *   Input text.
  *
  * @return string
- *    Text where ignore tags have been replaced by tokens.
+ *   Text where ignore tags have been replaced by tokens.
  */
 function nexteuropa_token_ckeditor_replace_tmgmt_poetry_ignore_tags_with_tokens($text) {
   preg_match_all(NEXTEUROPA_TOKEN_CKEDITOR_REGEX_TMGMT_POETRY_IGNORE, $text, $matches);

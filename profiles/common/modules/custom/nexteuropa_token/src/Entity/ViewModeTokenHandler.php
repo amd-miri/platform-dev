@@ -42,38 +42,39 @@ class ViewModeTokenHandler extends TokenAbstractHandler {
     $replacements = array();
 
     if ($this->isValidTokenType($type)) {
-      foreach ($tokens as $name => $original) {
+      foreach ($tokens as $original) {
         if ($this->isValidToken($original)) {
-          $render = array();
-          $entity_id = $this->getEntityIdFromToken($original);
-          $view_mode = $this->getViewModeFromToken($original);
+          $entity_view_mode_type = $this->getViewModeTypeHandlers();
 
-          switch ($type) {
-            case 'node':
-              $node = node_load($entity_id);
-              if ($this->canViewNode($node)) {
-                $render = node_view($node, $view_mode);
+          // By default let this be the token, not converted.
+          $render = array(
+            '#markup' => $original,
+          );
+
+          if (isset($entity_view_mode_type[$type])) {
+            // Initialize the object.
+            $entity_view_mode_type = $this->getEntityViewModeType($type, array(
+              'entity id' => $this->getEntityIdFromToken($original),
+              'view mode' => $this->getViewModeFromToken($original),
+            )
+            );
+
+            // Before trying to render, check if the view mode is available.
+            if ($entity_view_mode_type->isValidViewMode()) {
+              if ($render_tmp = $entity_view_mode_type->entityView()) {
+                // If the render is successful, overwrite the default
+                // variable content.
+                $render = $render_tmp;
               }
-              break;
-
-            case 'term':
-              $term = taxonomy_term_load($entity_id);
-              $render = taxonomy_term_view($term, $view_mode);
-              break;
-
-            case 'user':
-              $account = user_load($entity_id);
-              if (user_access('access user profiles')) {
-                $render = user_view($account, $view_mode);
-              }
-              break;
+            }
           }
 
           // Remove contextual links for inline rendered entities.
           if (module_exists('contextual')) {
             unset($render['#contextual_links']);
           }
-          $replacements[$original] = $render ? drupal_render($render) : '';
+
+          $replacements[$original] = drupal_render($render);
         }
       }
     }
@@ -84,10 +85,10 @@ class ViewModeTokenHandler extends TokenAbstractHandler {
    * Extract view mode machine name from a token string.
    *
    * @param string $original
-   *    Token, in its original format, eg. [node:1:view-mode:full].
+   *   Token, in its original format, eg. [node:1:view-mode:full].
    *
    * @return string
-   *    Extracted view mode machine name.
+   *   Extracted view mode machine name.
    */
   public function getViewModeFromToken($original) {
     return $this->parseToken($original, 'view_mode');
@@ -123,15 +124,20 @@ class ViewModeTokenHandler extends TokenAbstractHandler {
    * Get view modes machine names per entity.
    *
    * @param string $token_type
-   *    Entity token type name.
+   *   Entity token type name.
    *
    * @return array
-   *    List of view mode machine names for a given entity token type.
+   *   List of view mode machine names for a given entity token type.
    */
   public function getEntityViewModes($token_type) {
-
     $view_modes = array();
-    $entity_type = $token_type == 'term' ? 'taxonomy_term' : $token_type;
+    $token_types = token_get_entity_mapping();
+    if (isset($token_types[$token_type])) {
+      $entity_type = $token_types[$token_type];
+    }
+    else {
+      $entity_type = $token_type;
+    }
     $info = entity_get_info($entity_type);
     foreach ($info['view modes'] as $mode => $mode_info) {
       $view_modes[] = $mode;
@@ -143,10 +149,10 @@ class ViewModeTokenHandler extends TokenAbstractHandler {
    * Get token name using predefined token prefix.
    *
    * @param string $view_mode
-   *    View mode machine name.
+   *   View mode machine name.
    *
    * @return string
-   *    Formatted token name.
+   *   Formatted token name.
    *
    * @see ViewModeTokenHandler::hookTokenInfoAlter()
    */
@@ -158,7 +164,7 @@ class ViewModeTokenHandler extends TokenAbstractHandler {
    * Returns entity token types list.
    *
    * @return array
-   *    List of entity info array.
+   *   List of entity info array.
    */
   public function getEntityTokenTypes() {
     $supported_types = $this->getSupportedTokenTypes();
@@ -168,37 +174,56 @@ class ViewModeTokenHandler extends TokenAbstractHandler {
   }
 
   /**
-   * Check if current node can be viewed.
+   * TODO: todo.
    *
-   * @param object $node
-   *    Node object.
-   *
-   * @return bool
-   *    TRUE if provided node can be viewed, FALSE otherwise.
+   * @return array
+   *   An array of plugin definitions.
    */
-  private function canViewNode($node) {
-    global $user;
+  private function getViewModeTypeHandlers() {
+    $handlers = &drupal_static(__FUNCTION__);
+    if (!isset($handlers)) {
+      if ($cache = cache_get('nexteuropa_token:EntityViewModeType')) {
+        $handlers = $cache->data;
+      }
+      else {
+        $handlers = module_invoke_all('nexteuropa_token_entity_view_mode_type');
+        drupal_alter('nexteuropa_token_entity_view_mode_type', $handlers);
+        cache_set('nexteuropa_token:EntityViewModeType', $handlers, 'cache');
+      }
+    }
+    return $handlers;
+  }
 
-    // Make sure we don't render a node inside itself, preventing infinite loop.
-    $object = menu_get_object('node');
-    if (is_object($object) && isset($object->nid) && $object->nid == $node->nid) {
-      drupal_set_message(t('Cannot render a node inside itself, remove any view mode token related to the current node.'));
-      return FALSE;
+  /**
+   * Get instance of entity view mode type handler object.
+   *
+   * @param string $type
+   *   The entity type.
+   * @param array $configuration
+   *   The configuration array.
+   *
+   * @return \Drupal\nexteuropa_token\Entity\ViewModeType\ViewModeTypeInterface
+   *   Entity view mode type object.
+   *
+   * @throws \Exception
+   *   Throws exception if no handler class has been found.
+   */
+  public function getEntityViewModeType($type, array $configuration = array()) {
+    $handlers = $this->getViewModeTypeHandlers();
+    if (!isset($handlers[$type])) {
+      throw new \Exception(t('Entity view mode type handler with name !name not found.', array('!name' => $type)));
     }
-
-    // Make sure current user can actually access the rendered node.
-    if (user_access('bypass node access') || user_access('administer nodes')) {
-      return TRUE;
-    }
-    if (!node_access('view', $node)) {
-      return FALSE;
-    }
-    if ($node->status == 0) {
-      return ($node->uid == $user->uid) && user_access('view own unpublished content');
+    elseif (!class_exists($handlers[$type])) {
+      throw new \Exception(t('Entity view mode type class !class not found.', array('!class' => $handlers[$type])));
     }
     else {
-      return TRUE;
+      $reflection = new \ReflectionClass($handlers[$type]);
+      if (!$reflection->implementsInterface('\Drupal\nexteuropa_token\Entity\ViewModeType\ViewModeTypeInterface')) {
+        throw new \Exception(t('Entity view mode type class !class must implement \Drupal\nexteuropa_token\Entity\ViewModeType\ViewModeTypeInterface interface.', array('!class' => $handlers[$type])));
+      }
     }
+
+    return $reflection->newInstance()->setConfiguration($configuration);
   }
 
 }

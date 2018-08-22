@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * nexteuropa_mediagallery.ds.inc
@@ -42,6 +43,7 @@ function nexteuropa_mediagallery_ds_view_modes_info() {
   $ds_view_mode->view_mode = 'media_gallery_page';
   $ds_view_mode->label = 'Media Gallery thumbnail';
   $ds_view_mode->entities = array(
+    'node' => 'node',
     'file' => 'file',
   );
   $export['media_gallery_page'] = $ds_view_mode;

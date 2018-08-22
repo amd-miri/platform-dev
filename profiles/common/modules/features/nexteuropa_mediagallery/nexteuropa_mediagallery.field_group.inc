@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * nexteuropa_mediagallery.field_group.inc
@@ -23,9 +24,9 @@ function nexteuropa_mediagallery_field_group_info() {
     'label' => 'Content',
     'weight' => '0',
     'children' => array(
-      0 => 'body',
+      0 => 'field_media_upload',
       1 => 'title_field',
-      2 => 'field_media_upload',
+      2 => 'field_ne_body',
     ),
     'format_type' => 'tab',
     'format_settings' => array(
@@ -52,9 +53,9 @@ function nexteuropa_mediagallery_field_group_info() {
     'label' => 'Metadata',
     'weight' => '3',
     'children' => array(
-      0 => 'og_group_ref',
+      0 => 'field_tags',
       1 => 'group_content_access',
-      2 => 'field_tags',
+      2 => 'og_group_ref',
       3 => 'language',
     ),
     'format_type' => 'tab',

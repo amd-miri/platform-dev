@@ -6,6 +6,8 @@
  */
 
 use Behat\Behat\Context\SnippetAcceptingContext;
+use Behat\Behat\Hook\Scope\AfterStepScope;
+use Behat\Behat\Hook\Scope\BeforeScenarioScope;
 use Behat\Gherkin\Node\TableNode;
 use Behat\Mink\Element\NodeElement;
 use Behat\Mink\Exception\ExpectationException;
@@ -28,6 +30,11 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
 
   /**
    * Checks that the given select field has the options listed in the table.
+   *
+   * Usage example:
+   *   Then I should have the following options for "edit-operation":
+   *     | options               |
+   *     | editorial team member |
    *
    * @Then I should have the following options for :select:
    */
@@ -64,6 +71,11 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
 
   /**
    * Checks that the given select field doesn't have the listed options.
+   *
+   * Usage example:
+   *   Then I should not have the following options for "edit-operation":
+   *     | options               |
+   *     | editorial team member |
    *
    * @Then I should not have the following options for :select:
    */
@@ -116,129 +128,6 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
   }
 
   /**
-   * Disabled and uninstall modules.
-   *
-   * @AfterScenario
-   */
-  public function cleanModule() {
-    if (isset($this->modules) && !empty($this->modules)) {
-      // Disable and uninstall any modules that were enabled.
-      module_disable($this->modules);
-      $res = drupal_uninstall_modules($this->modules);
-      unset($this->modules);
-    }
-  }
-
-  /**
-   * Enables one or more modules.
-   *
-   * Provide modules data in the following format:
-   *
-   * | modules  |
-   * | blog     |
-   * | book     |
-   *
-   * @param TableNode $modules_table
-   *   The table listing modules.
-   *
-   * @return bool
-   *   Always returns TRUE.
-   *
-   * @throws \Exception
-   *   Thrown when a module does not exist.
-   *
-   * @Given the/these module/modules is/are enabled
-   */
-  public function enableModule(TableNode $modules_table) {
-    $rebuild = FALSE;
-    $message = array();
-    foreach ($modules_table->getHash() as $row) {
-      if (!module_exists($row['modules'])) {
-        if (!module_enable($row)) {
-          $message[] = $row['modules'];
-        }
-        else {
-          $this->modules[] = $row['modules'];
-          $rebuild = TRUE;
-        }
-      }
-    }
-
-    if (!empty($message)) {
-      throw new \Exception(sprintf('Modules "%s" not found', implode(', ', $message)));
-    }
-    else {
-      if ($rebuild) {
-        drupal_flush_all_caches();
-      }
-      return TRUE;
-    }
-  }
-
-  /**
-   * Enables one or more Feature Set(s).
-   *
-   * Provide feature set names in the following format:
-   *
-   * | featureSet  |
-   * | Events      |
-   * | Links       |
-   *
-   * @param TableNode $featureset_table
-   *   The table listing feature set titles.
-   *
-   * @Given the/these featureSet/FeatureSets is/are enabled
-   */
-  public function enableFeatureSet(TableNode $featureset_table) {
-    $rebuild = FALSE;
-    $message = array();
-    $featuresets = feature_set_get_featuresets();
-    foreach ($featureset_table->getHash() as $row) {
-      foreach ($featuresets as $featureset_available) {
-        if ($featureset_available['title'] == $row['featureSet'] &&
-        feature_set_status($featureset_available) === FEATURE_SET_DISABLED) {
-          if (feature_set_enable_feature_set($featureset_available)) {
-            $this->features_set[] = $featureset_available;
-            $rebuild = TRUE;
-          }
-          else {
-            $message[] = $row['featureSet'];
-          }
-        }
-      }
-    }
-    if (!empty($message)) {
-      throw new \Exception(sprintf('Feature Set "%s" not correctly enabled', implode(', ', $message)));
-    }
-    else {
-      if ($rebuild) {
-        drupal_flush_all_caches();
-      }
-      return TRUE;
-    }
-  }
-
-  /**
-   * Disables one or more Feature Set(s).
-   *
-   * Disable any Feature Set that were enabled during Feature test.
-   *
-   * @AfterScenario
-   */
-  public function cleanFeatureSet() {
-    if (isset($this->features_set) && !empty($this->features_set)) {
-      // Disable and uninstall any feature set that were enabled.
-      foreach ($this->features_set as $featureset) {
-        if (isset($featureset['disable'])) {
-          $featureset['uninstall'] = $featureset['disable'];
-          feature_set_disable_feature_set($featureset);
-        }
-      }
-      unset($this->features_set);
-    }
-  }
-
-  /**
    * Check the languages order in the language selector page.
    *
    * @Then the language options on the page content language switcher should be :active_language non clickable followed by :language_order links
@@ -256,32 +145,6 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
 
     if (!preg_match($pattern, $page_content)) {
       throw new Exception(sprintf('The page content language switcher is not set to %s and not followed by the language links %s.', $active_language, $language_order));
-    }
-  }
-
-  /**
-   * Reinitialize some environment settings.
-   *
-   * @AfterScenario @cleanEnvironment
-   */
-  public static function cleanEnvironment() {
-    // Restore homepage.
-    variable_set("site_frontpage", "node");
-
-    // Restore default language (en) settings.
-    $languages = language_list('enabled', TRUE);
-    if (isset($languages['1']['en'])) {
-      $language = $languages['1']['en'];
-
-      $language->prefix = '';
-      $properties[] = 'prefix';
-
-      $fields = array_intersect_key((array) $language, array_flip($properties));
-      // Update language fields.
-      db_update('languages')
-        ->fields($fields)
-        ->condition('language', $language->language)
-        ->execute();
     }
   }
 
@@ -383,7 +246,60 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
   }
 
   /**
-   * Enables translation for a field (temporary step @todo remove).
+   * Prepare for PHP errors log.
+   *
+   * @BeforeScenario
+   */
+  public static function preparePhpErrors(BeforeScenarioScope $scope) {
+    // Clear out the watchdog table at the beginning of each test scenario.
+    db_truncate('watchdog')->execute();
+  }
+
+  /**
+   * Check for PHP errors log.
+   *
+   * @param AfterStepScope $scope
+   *   AfterStep hook scope object.
+   *
+   * @throws \Exception
+   *   Print out descriptive error message by throwing an exception.
+   *
+   * @AfterStep
+   */
+  public static function checkPhpErrors(AfterStepScope $scope) {
+    // Find any PHP errors at the end of the suite
+    // and output them as an exception.
+    $log = db_select('watchdog', 'w')
+      ->fields('w')
+      ->condition('w.type', 'php', '=')
+      ->execute()
+      ->fetchAll();
+    if (!empty($log)) {
+      $errors = count($log);
+      $step_text = $scope->getStep()->getText();
+      $step_line = $scope->getStep()->getLine();
+      $feature_title = $scope->getFeature()->getTitle();
+      $feature_file = $scope->getFeature()->getFile();
+      $message = "$errors PHP errors were logged to the watchdog\n";
+      $message .= "Feature: '$feature_title' on '$feature_file' line $step_line\n";
+      $message .= "Step: '$step_text'\n";
+      $message .= "Errors:\n";
+      $message .= "----------\n";
+      foreach ($log as $error) {
+        $error->variables = unserialize($error->variables);
+        $date = date('Y-m-d H:i:sP', $error->timestamp);
+        $message .= sprintf("Message: %s: %s in %s (line %s of %s).\n", $error->variables['%type'], $error->variables['!message'], $error->variables['%function'], $error->variables['%line'], $error->variables['%file']);
+        $message .= "Location: $error->location\n";
+        $message .= "Referer: $error->referer\n";
+        $message .= "Date/Time: $date\n\n";
+      }
+      $message .= "----------\n";
+      throw new \Exception($message);
+    }
+  }
+
+  /**
+   * Enables translation for a field.
    *
    * @param string $field
    *   The name of the field.
@@ -391,9 +307,287 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
    * @When I enable translation for field :field
    */
   public function enableTranslationForField($field) {
-    $info = field_info_field($field);
-    $info['translatable'] = 1;
-    field_update_field($info);
+    multisite_config_service('field')->enableFieldTranslation($field);
+  }
+
+  /**
+   * Assert the given class exists.
+   *
+   * @param string $class_name
+   *   Fully namespaced class name.
+   *
+   * @throws \Behat\Mink\Exception\ExpectationException
+   *   Throw exception if class specified has not been found.
+   *
+   * @Then the class :arg1 exists in my codebase
+   */
+  public function assertClassExists($class_name) {
+    if (!class_exists($class_name)) {
+      throw new ExpectationException("Class '{$class_name}' not found.", $this->getSession());
+    }
+  }
+
+  /**
+   * Make a user with the OG role in the group (create it if it doesn't exist).
+   *
+   * @Given I am a/an :roles user, member of entity :entity_name of type :entity_type as :group_role
+   */
+  public function iAmMemberOfEntityHavingRole($roles, $group_role, $entity_name, $entity_type) {
+    // Create the user.
+    $account = (object) array(
+      'name' => $this->getRandom()->name(8),
+      'mail' => $this->getRandom()->name(8) . '@example.com',
+      'pass' => $this->getRandom()->name(16),
+      'role' => $roles,
+      'field_terms_and_conditions' => 'Terms and conditions have been accepted',
+    );
+    $this->userCreate($account);
+    $roles = array_map('trim', explode(',', $roles));
+    foreach ($roles as $role) {
+      if (!in_array($role, array('authenticated', 'authenticated user'))) {
+        $this->getDriver()->userAddRole($account, $role);
+      }
+    }
+    // Try to use an existing 'entity' node.
+    try {
+      $entity = $this->getNodeByTitle($entity_type, $entity_name);
+    }
+    catch (ExpectationException $e) {
+      $entity = FALSE;
+    }
+    // Create the group, if doesn't exist.
+    if (!$entity) {
+      $entity = $this->nodeCreate((object) array(
+        'status' => TRUE,
+        'uid' => 1,
+        'type' => $entity_type,
+        'title' => $entity_name,
+      ));
+    }
+    $this->addMembertoGroup($account, $group_role, $entity);
+    // Authenticate.
+    $this->login();
+  }
+
+  /**
+   * Adds a member to an organic group with the specified role.
+   *
+   * @param object $account
+   *   The user to be added in group.
+   * @param string $group_role
+   *   The machine name of the group role.
+   * @param object $group
+   *   The group node.
+   * @param string $group_type
+   *   (optional) The group's entity type.
+   *
+   * @throws \Exception
+   *    Print out descriptive error message by throwing an exception.
+   */
+  protected function addMembertoGroup($account, $group_role, $group, $group_type = 'node') {
+    list($gid, ,) = entity_extract_ids($group_type, $group);
+    $membership = og_group($group_type, $gid, array(
+      'entity type' => 'user',
+      'entity' => $account,
+    ));
+    if (!$membership) {
+      throw new \Exception("The Organic Group membership could not be created.");
+    }
+    // Add role for membership.
+    $roles = og_roles($group_type, $group->type, $gid);
+    $rid = array_search($group_role, $roles);
+    if (!$rid) {
+      throw new \Exception("'$group_role' is not a valid group role.");
+    }
+    og_role_grant($group_type, $gid, $account->uid, $rid);
+  }
+
+  /**
+   * Loads a node by its title.
+   *
+   * @param string $type
+   *   The node type.
+   * @param string $title
+   *   The node title.
+   *
+   * @return \stdClass
+   *   The node object.
+   *
+   * @throws ExpectationException
+   *   When no node is found.
+   */
+  protected function getNodeByTitle($type, $title) {
+    if (!($node = node_load_multiple(array(), array(
+      'type' => $type,
+      'title' => $title,
+    ), TRUE))
+    ) {
+      throw new ExpectationException("There's no '$type' node entitled '$title'.", $this->getSession());
+    }
+    $node = reset($node);
+    return $node;
+
+  }
+
+  /**
+   * Check if given field is translatable.
+   *
+   * @param string $field_name
+   *   Field machine name.
+   *
+   * @throws \Behat\Mink\Exception\ExpectationException
+   *   Throw exception if field is not translatable.
+   *
+   * @Given the :field_name field is translatable
+   */
+  public function assertFieldIsTranslatable($field_name) {
+    $info = field_info_field($field_name);
+    if (!isset($info['translatable']) || !$info['translatable']) {
+      throw new ExpectationException("Field '{$field_name}' is not translatable.", $this->getSession());
+    }
+  }
+
+  /**
+   * Checks, that elements are highlighted on page.
+   *
+   * @Then I should see highlighted elements
+   */
+  public function iShouldSeeHighlightedElements() {
+    // ICE-Tracking is the css class that highlights page elements.
+    $node_tag = $this->getDrupalSelector('node_tag');
+    $this->assertSession()->elementExists('css', $node_tag . '.ICE-Tracking');
+  }
+
+  /**
+   * Checks that no elements are highlighted on page.
+   *
+   * @Then I should not see highlighted elements
+   */
+  public function iShouldNotSeeHighlightedElements() {
+    // div.ICE-Tracking is the css definition that highlights page elements.
+    $node_tag = $this->getDrupalSelector('node_tag');
+    $this->assertSession()->elementNotExists('css', $node_tag . 'div.ICE-Tracking');
+  }
+
+  /**
+   * Assert that the given form element is disabled.
+   *
+   * @Then the :label checkbox should be disabled
+   * @Then the :label form element should be disabled
+   */
+  public function assertDisabledElement($label) {
+    if (!$this->assertSession()->fieldExists($label)->hasAttribute('disabled')) {
+      throw new ExpectationException("Form element '{$label}' is not disabled", $this->getDriver());
+    }
+  }
+
+  /**
+   * Reinitialize some Community environment settings.
+   *
+   * @AfterFeature @cleanCommunityEnvironment
+   */
+  public static function cleanCommunityEnvironment() {
+
+    // Delete community's variables.
+    $feature = features_load_feature('nexteuropa_communities');
+    if (isset($feature->info['features']['variable'])) {
+      foreach ($feature->info['features']['variable'] as $varname) {
+        variable_del($varname);
+      }
+    }
+
+    // Delete community's menu_links.
+    if (isset($feature->info['features']['menu_links'])) {
+      foreach ($feature->info['features']['menu_links'] as $menulinks) {
+        menu_link_delete(NULL, $menulinks);
+      }
+    }
+
+    // Delete community's menu_custom.
+    if (isset($feature->info['features']['menu_custom'])) {
+      foreach ($feature->info['features']['menu_custom'] as $menucustom) {
+        $menu = menu_load($menucustom);
+        menu_delete($menu);
+      }
+    }
+
+    drupal_flush_all_caches();
+  }
+
+  /**
+   * Create a new revision for content of given type and title.
+   *
+   * @Given I create a new revision for :arg1 content with title :arg2
+   */
+  public function createNewRevision($type, $title) {
+    $node = $this->getNodeByTitle($type, $title);
+    $node->revision = TRUE;
+    node_save($node);
+  }
+
+  /**
+   * Revert given content to its first revision.
+   *
+   * @Given I revert the :arg1 content with title :arg2 to its first revision
+   */
+  public function revertContentToFirstRevision($type, $title) {
+    $node = $this->getNodeByTitle($type, $title);
+    $revisions = node_revision_list($node);
+    ksort($revisions);
+    $node_revision = array_shift($revisions);
+    $node_revision = node_load($node->nid, $node_revision->vid);
+    $node_revision->revision = TRUE;
+    node_save($node_revision);
+  }
+
+  /**
+   * Assert field language given field name, content type and content title.
+   *
+   * @Then I should only have :arg1 in :arg2 for :arg3 published content with title :arg4
+   */
+  public function assertFieldLanguageForPublishedContentWithTitle($field_name, $language, $type, $title) {
+    $node = $this->getNodeByTitle($type, $title);
+
+    $query = db_select("field_data_{$field_name}", 'f')
+      ->fields('f', ['language', 'entity_id'])
+      ->condition('entity_type', 'node')
+      ->condition('language', $language, '!=')
+      ->condition('bundle', $type)
+      ->condition('entity_id', $node->nid)
+      ->countQuery();
+
+    $results = $query->execute()->fetchField();
+    if ($results > 0) {
+      throw new ExpectationException("Other languages than '{$language}' have been found for '{$field_name}' field.", $this->getSession());
+    }
+  }
+
+  /**
+   * Wait ":sec" seconds before going to the next step.
+   *
+   * @Then I wait :sec seconds
+   */
+  public function wait($sec) {
+      sleep($sec);
+  }
+
+  /**
+   * Returns a specific css selector.
+   *
+   * @param string $name
+   *   string CSS selector name.
+   *
+   * @return string text
+   *   The selector.
+   *
+   * @throws Exception
+   */
+  public function getDrupalSelector($name) {
+    $text = $this->getDrupalParameter('selectors');
+    if (!isset($text[$name])) {
+      throw new \Exception(sprintf('No such selector configured: %s', $name));
+    }
+    return $text[$name];
   }
 
 }

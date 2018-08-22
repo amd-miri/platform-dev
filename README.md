@@ -1,5 +1,4 @@
 [![Build Status](https://status.continuousphp.com/git-hub/ec-europa/platform-dev?token=4df2e996-5362-486e-b409-84527de6a65b&branch=develop)](https://continuousphp.com/git-hub/ec-europa/platform-dev)
-[![Build Status](https://travis-ci.org/ec-europa/platform-dev.svg?branch=develop)](https://travis-ci.org/ec-europa/platform-dev)
 
 # NextEuropa
 
@@ -12,19 +11,10 @@
 ## Install build system
 
 Before we can build the NextEuropa platform we need to install the build system
-itself. This can be done using composer:
+itself. This can be done using [composer](https://getcomposer.org/):
 
 ```
 $ composer install
-```
-
-### Tips
-
-If you have a global install of composer already, this may cause conflict.
-Try the command below.
-
-```
-$ curl -sS https://getcomposer.org/installer | php
 ```
 
 ## Customize build properties
@@ -83,12 +73,52 @@ $ ./bin/phing build-platform-dev
 $ ./bin/phing install-platform
 ```
 
+### From the release 2.4.x following configuration variables are available:
+
+  - The default theme to enable, set to either "ec_resp" (default) or "ec_europa".
+
+> platform.site.theme_default = ec_resp
+
+  - The default Europa Component Library release which is used to build the EC Europa theme.
+
+> ecl.version = v0.10.0
+  
+  - The default EC Europa theme release version.
+
+> ec_europa.version = 0.0.2
+
+  - The default Atomium theme build properties. Used only if default theme is set to "ec_europa".
+  You can find default values of those variables below. 
+  
+>platform.theme.atomium.repo.url = https://github.com/ec-europa/atomium.git
+>platform.theme.atomium.repo.branch = 7.x-1.x
+
+
+## Building a local development environment for the EC Europa theme
+
+There is a specific Phing target which is setting up the development environment
+for the EC Europa theme needs. It helps developers to perform code reviews and
+contribute code to the repositories.
+It clones the repository of the Atomium and EC Europa themes. It will also
+fetch the release package of the Europa Components Library and regenerate theme assets.
+
+**To run this target you must have node.js and npm installed on your local machine.**
+You need also configure additional configuration variables which are described in the
+section above. The most important is to set the `platform.site.theme_default` variable
+to `ec_europa`.
+
+You can use this Phing target in the following way:
+```
+$ ./bin/phing build-europa-dev
+```
+This Phing target is meant to be used only for the local development purposes.
+
 ## Running Behat tests
 
 The Behat test suite is located in the `tests/` folder. When the development
 version is installed (by running `./bin/phing build-platform-dev`) the Behat
-configuration file (`behat.yml`) will be generated automatically using the base
-URL that is defined in `build.properties.local`.
+configuration files (`behat*.yml`) will be generated automatically using the
+base URL that is defined in `build.properties.local`.
 
 If you are not using the development build but one of the other builds
 (`build-platform-dist` or `build-multisite-dist`) and you want to run the tests
@@ -101,49 +131,130 @@ $ ./bin/phing setup-behat
 In order to run JavaScript in your Behat tests, you must launch a PhantomJS
 instance before. Use the `--debug` parameter to get more information. Please
 be sure that the webdriver's port you specify corresponds to the one in your
-Behat configuration (`wd_host: "http://localhost:8643/wd/hub"`).
+Behat configuration (`behat.wd_host.url: "http://localhost:8643/wd/hub"`).
 
 ```
 $ phantomjs --debug=true --webdriver=8643
 ```
 
-The easiest way to run the tests is by going into the test folder and executing
-the symlink which is placed there for your convenience.
+If you prefer to use an actual browser with Selenium instead of PhantomJS, you
+need to define the Selenium server URL and browser to use, for instance:
 
 ```
-$ cd tests/
-$ ./behat
-```
-
-If you want to execute a single test, just provide the path to the test as an
-argument. The tests are located in `tests/features/`:
-
-```
-$ cd tests/
-$ ./behat features/content_editing.feature
+behat.wd_host.url = http://localhost:4444/wd/hub
+behat.browser.name = chrome
 ```
 
 The tests can also be run from the root of the repository (or any other folder)
 by calling the behat executable directly and specifying the location of the
 `behat.yml` configuration file.
 
+Behat tests can be executed from the repository root by running:
+
 ```
-# Running the tests from the repository root folder.
 $ ./bin/behat -c tests/behat.yml
 ```
 
-The tests can also be executed from the root folder of the build:
+The platform can run 4 different behat profiles:
+* default: it runs behat tests against a multisite_drupal_standard build using 
+the "Europa" theme;
+* communities: it runs behat tests against a multisite_drupal_communities build 
+using the "Europa" theme;
+* standard_ec_resp: it runs behat tests against a multisite_drupal_standard build using
+the "ec_resp" theme;
+* communities_ec_resp: it runs behat tests against a multisite_drupal_communities build
+using the "ec_resp" theme;
+
+The behat execution command mentioned above runs the tests only with the default profile. <br />
+The tests will fail with it if the platform is built with the "ec_resp" theme.
+
+To run a profile other than the default one , the following command must be executed:
 
 ```
-$ cd build/
-$ ../bin/behat
+$ ./bin/behat -c tests/behat.yml -p [profile]
 ```
+
+`[profile]` stands for the profile name as written in the list above; I.E: communities,
+standard_ec_resp, communities_ec_resp.
+
+If you want to execute a single test, just provide the path to the test as an argument. 
+ The tests are located in `tests/features/`. For example:
+
+```
+$ ./bin/behat -c tests/behat.yml tests/features/content_editing.feature
+```
+
+Some tests need to mimic external services that listen on particular ports, e.g.
+the central server of the Integration Layer. If you already have services running
+on the same ports, they will conflict. You will need to change the ports used in
+build.properties.local.
+
+Remember to specify the right configuration file before running the tests.
+
+## Running PHPUnit tests
+
+Custom modules and features can be tested against a running platform installation
+by using PHPUnit. When the development version is installed (by running
+`./bin/phing build-platform-dev`) the PHPUnit configuration file `phpunit.xml`
+will be generated automatically using configuration properties defined in
+`build.properties.local`.
+
+If you are not using the development build but one of the other builds
+(`build-platform-dist` or `build-multisite-dist`) and you want to run PHPUnit tests
+then you'll need to set up the PHPUnit configuration manually by running:
+
+```
+$ ./bin/phing setup-phpunit
+```
+
+Each custom module or feature can expose unit tests by executing the following steps:
+
+- Add `registry_autoload[] = PSR-4` to `YOUR_MODULE.info`
+- Create the following directory: `YOUR_MODULE/src/Tests`
+- Add your test classes in the directory above
+
+In order for test classes to be autoloaded they must follow the naming convention below:
+
+- File name must end with `Test.php`
+- Class name and file name must be identical
+- Class namespace must be set to `namespace Drupal\YOUR_MODULE\Tests;`
+- Class must extend `Drupal\nexteuropa\Unit\AbstractUnitTest`
+
+The following is a good example of a valid unit test class:
+
+```php
+<?php
+
+/**
+ * @file
+ * Contains \Drupal\nexteuropa_core\Tests\ExampleTest.
+ */
+
+namespace Drupal\nexteuropa_core\Tests;
+
+use Drupal\nexteuropa\Unit\AbstractUnitTest;
+
+/**
+ * Class ExampleTest.
+ *
+ * @package Drupal\nexteuropa_core\Tests
+ */
+class ExampleTest extends AbstractUnitTest {
+  ...
+}
+```
+
+PHPUnit tests can be executed from the repository root by running:
+
+```
+$ ./bin/phpunit -c tests/phpunit.xml
+```
+
 
 ## Checking for coding standards violations
 
-When a development build is created by executing the 'build-platform-dev' Phing
-target PHP CodeSniffer will be set up and can be run with the following
-command:
+After executing the 'setup-php-codesniffer' Phing target,
+PHP CodeSniffer will be set up and can be run with the following command:
 
 ```
 # Scan all files for coding standards violations.

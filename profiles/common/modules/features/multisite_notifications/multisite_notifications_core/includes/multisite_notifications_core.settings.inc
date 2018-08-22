@@ -26,7 +26,7 @@ function multisite_notifications_core_general_settings() {
   );
 
   // Subject.
-  foreach ($languages = language_list() as $language) {
+  foreach (language_list() as $language) {
     $form['subscription_block_settings']['subscribe_confirmation']['subscribe_subject_' . $language->language] = array(
       '#title' => t('Subscribe mail subject: @name', array('@name' => $language->name)),
       '#type' => 'textfield',
@@ -35,7 +35,7 @@ function multisite_notifications_core_general_settings() {
   }
 
   // Body.
-  foreach ($languages = language_list() as $language) {
+  foreach (language_list() as $language) {
     $form['subscription_block_settings']['subscribe_confirmation']['subscribe_message_' . $language->language] = array(
       '#title' => t('Subscribe mail body: @name', array('@name' => $language->name)),
       '#type' => 'textarea',
@@ -52,7 +52,7 @@ function multisite_notifications_core_general_settings() {
   );
 
   // Subject.
-  foreach ($languages = language_list() as $language) {
+  foreach (language_list() as $language) {
     $form['subscription_block_settings']['unsubscribe_confirmation']['unsubscribe_subject_' . $language->language] = array(
       '#title' => t('Unsubscribe mail subject: @name', array('@name' => $language->name)),
       '#type' => 'textfield',
@@ -61,7 +61,7 @@ function multisite_notifications_core_general_settings() {
   }
 
   // Body.
-  foreach ($languages = language_list() as $language) {
+  foreach (language_list() as $language) {
     $form['subscription_block_settings']['unsubscribe_confirmation']['unsubscribe_message_' . $language->language] = array(
       '#title' => t('Unsubscribe mail body: @name', array('@name' => $language->name)),
       '#type' => 'textarea',
@@ -107,7 +107,7 @@ Your subscription on [site:name] notifies you of {{[subs:is-new]==0?:a new post:
 [subs:comments:join:
 ]
 }}| Direct unsubscribe link ([subs:type]):
-| [site:url]/unsubscribe/[current-user:uid]
+| [subs:unsubscribe-url]
 {{MAIL@| This is an automated message. Please do NOT reply to the sender address!
 {{[current-user:roles:last] == subscriber? :"To manage your subscriptions go to: [subs:manage-url]"}}
 
